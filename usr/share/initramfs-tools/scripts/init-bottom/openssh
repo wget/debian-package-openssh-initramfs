@@ -15,10 +15,10 @@ esac
 
 . /scripts/functions
 
-[ -s /run/dropbear.pid ] || exit 0
+[ -s /run/sshd.pid ] || exit 0
 
-log_begin_msg "Stopping dropbear"
+log_begin_msg "Stopping OpenSSH"
 
-pid=$(cat /run/dropbear.pid)
+pid=$(cat /run/sshd.pid)
 ps -eo ppid,pid | sed -nr "s/^\s*$pid\s+([0-9]+)\s*$/\1/p" | xargs -r kill
 kill $pid

@@ -15,66 +15,93 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
-dropbear_warn() {
-    echo "dropbear: WARNING:" "$@" >&2
+openssh_warn() {
+    echo "openssh: WARNING:" "$@" >&2
 }
 
-for conf in "$CONFDIR/initramfs.conf" "$CONFDIR/conf-hooks.d/dropbear"; do
-    # XXX backward compatibility; remove once Stretch is the current stable
-    if [ -f "$conf" ] && grep -q ^DROPBEAR= "$conf"; then
-        dropbear_warn "Setting DROPBEAR in $conf is deprecated and will be ignored in a future release"
-        . "$conf"
-        if [ "$DROPBEAR" = n ]; then
-            dropbear_warn "Uninstall dropbear-initramfs instead to disable the dropbear initramfs boot script"
-            exit 0
-        fi
+# Avoid conflict with dropbear if it is installed.
+# NOTE: We know this is ugly, bu we are running in a POSIX shell (likely dash
+# as sh is by default symlinked to dash on Debian) which do not have arrays as
+# specification.
+dropbearFiles=$(find /usr/share/initramfs-tools/ -name '*dropbear*' 2>/dev/null)
+for file in $dropbearFiles; do
+    if [ -f "$file" ]; then
+        openssh_warn "Uninstall dropbear-initramfs first in order to don't conflict with this openssh-based initramfs implementation"
+        exit 0
     fi
 done
-if grep -q ^DROPBEAR_ "$CONFDIR/initramfs.conf" || grep -q ^PKGOPTION_dropbear_ "$CONFDIR/initramfs.conf"; then
-    # XXX backward compatibility; remove once Stretch is the current stable
-    dropbear_warn "Setting DROPBEAR_* or PKGOPTION_dropbear_* in $CONFDIR/initramfs.conf is deprecated and will be ignored in a future release"
-    dropbear_warn "Use /etc/dropbear-initramfs/config instead"
-fi
 
 [ -r /etc/crypttab ] || exit 0
 
-copy_exec /usr/sbin/dropbear /sbin
-LIBC_DIR=$(ldd /usr/sbin/dropbear | sed -nr 's#.* => (/lib.*)/libc\.so\.[0-9.-]+ \(0x[[:xdigit:]]+\)$#\1#p')
+copy_exec /usr/sbin/sshd /sbin
+
+# In absence of PAM, OpenSSH uses getpwnam() from libnss.
+# src.: https://serverfault.com/a/820605
+LIBC_DIR=$(ldd /usr/sbin/sshd | sed -nr 's#.* => (/lib.*)/libc\.so\.[0-9.-]+ \(0x[[:xdigit:]]+\)$#\1#p')
 find -L "$LIBC_DIR" -maxdepth 1 -name 'libnss_files.*' -type f | while read so; do
-    copy_exec "$so"
+   copy_exec "$so"
 done
 
+# Create a specific home directory for the home user
 home=$(mktemp -d "$DESTDIR/root-XXXXXX")
 chmod 0700 "$home"
-for x in passwd group; do echo "$x: files"; done >"$DESTDIR/etc/nsswitch.conf"
-echo "root:*:0:0::${home#$DESTDIR}:/bin/sh" >"$DESTDIR/etc/passwd"
-echo "root:!:0:" >"$DESTDIR/etc/group"
 
-# Copy config and host keys
-mkdir -p "$DESTDIR/etc/dropbear"
-if [ -e /etc/dropbear-initramfs/config ]; then
-    cp -p "/etc/dropbear-initramfs/config" "$DESTDIR/etc/dropbear/"
+for x in passwd group; do
+    echo "$x: files";
+done >"$DESTDIR/etc/nsswitch.conf"
+echo "root:*:0:0:root:${home#$DESTDIR}:/bin/sh" >"$DESTDIR/etc/passwd"
+echo "root:x:0:" >"$DESTDIR/etc/group"
+
+# Copy ssh daemon configuration file.
+mkdir -p "$DESTDIR/etc/ssh"
+copy_file /etc/ssh/sshd_config "$DESTDIR/etc/ssh/"
+
+# When the initramfs is launched, we are in a single user mode. Disable the
+# ability for ssh to fork as another user (default sshd).
+echo "UsePrivilegeSeparation no" >> "$DESTDIR/etc/ssh/sshd_config"
+
+# This implementation is not working with PAM. Disable it. We tried to copy
+# libpam-runtime, libpam-modules, libpam-modules-bin, /etc/pam.d/* and
+# /lib/XXX-linux-gnu/pam* files without much success, the system was still
+# complaining with errors like "Failed none for invalid user root".
+sed -i -e 's/UsePAM yes/UsePAM no/g' "$DESTDIR/etc/ssh/sshd_config"
+
+# Might want to regenerate a new modulus file
+# src.: https://entropux.net/article/openssh-moduli/
+if [ ! -f /etc/ssh/initramfs/moduli ]; then
+    openssh_warn "Missing specific moduli file for initramfs. Using the system one instead."
+    openssh_warn "This is not recommended as this moduli file might be left exposed on a not encrypted partition!"
+    cp -p /etc/ssh/moduli "$DESTDIR/etc/ssh/"
+else
+    cp -p /etc/ssh/initramfs/moduli "$DESTDIR/etc/ssh/"
 fi
-for keytype in dss rsa ecdsa; do
-    hostkey="/etc/dropbear-initramfs/dropbear_${keytype}_host_key"
-    [ -f "$hostkey" ] && cp -p "$hostkey" "$DESTDIR/etc/dropbear/"
-done
 
-if [ -z "$(find "$DESTDIR/etc/dropbear" -maxdepth 1 -name 'dropbear_*_host_key')" ]; then
-    dropbear_warn "Missing host keys, remote unlocking of cryptroot via SSH won't work!"
+# Copy SSH host keys. Private and public keys are needed.
+hostKeys=$(find /etc/ssh/initramfs/ -name 'ssh_host*key*' 2>/dev/null)
+if [ -z "$hostKeys" ]; then
+    openssh_warn "Missing specific SSH host keys for initramfs. Using the system ones instead."
+    openssh_warn "This is not recommended as these keys might be left exposed on a not encrypted partition!"
+    cp -p /etc/ssh/ssh_host*key* "$DESTDIR/etc/ssh"
+else
+    if [ -z "$(find "$DESTDIR/etc/ssh" -maxdepth 1 -name 'ssh_host_*_key')" ]; then
+        openssh_warn "No SSH host key found, remote unlocking with cryptroot-unlock via SSH won't work!"
+        openssh_warn "Your current SSH connection might already be broken."
+    else
+        cp -p /etc/ssh/initramfs/ssh_host*key* "$DESTDIR/etc/ssh"
+    fi
 fi
 
 # Copy authorized_keys
 mkdir -m0700 "$home/.ssh"
-if [ -e /etc/dropbear-initramfs/authorized_keys ]; then
-    cat /etc/dropbear-initramfs/authorized_keys
+if [ -e /root/.ssh/authorized_keys ]; then
+    cat /root/.ssh/authorized_keys
 else
-    for keytype in dsa rsa ecdsa; do
-        pubkey="/etc/dropbear-initramfs/id_${keytype}.pub"
-        [ -e "$pubkey" ] && cat "$pubkey"
+    openssh_warn "Missing authorized file, simply adding system keys. Remote unlocking with cryptroot-unlock via SSH might not work."
+    for key in /etc/ssh/ssh_host*key*pub; do
+        cat "$key"
     done
 fi >"$home/.ssh/authorized_keys"
 
-if ! grep -qE '^([^#]+ )?(ssh-(dss|rsa)|ecdsa-sha2-nistp(256|384|521)) ' "$home/.ssh/authorized_keys"; then
-    dropbear_warn "Invalid authorized_keys file, remote unlocking of cryptroot via SSH won't work!"
+if ! grep -qE '^([^#]+ )?(ssh-(dss|rsa|ed25519)|ecdsa-sha2-nistp(256|384|521)) ' "$home/.ssh/authorized_keys"; then
+    openssh_warn "Invalid authorized_keys file, remote unlocking with cryptroot-unlock via SSH won't work!"
 fi
