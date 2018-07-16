@@ -16,6 +16,18 @@ cd openssh-initramfs-1.0/
 debuild -us -uc
 ```
 
+Note: There is no need to regenerate an archive each time you make changes to this repo. When you will rebuild the package to do some tests for example, the files from `debian/usr` are the ones that will be taken into account. The archive is only needed because the Debian helper tools assume the source code has been downloaded from somewhere. If there is no archive, the build process will fail even if we override in order to continue:
+```
+$ debuild -us -uc
+This package has a Debian revision number but there does not seem to be
+an appropriate original tar file or .orig directory in the parent directory;
+(expected one of openssh-initramfs_1.0.orig.tar.gz, openssh-initramfs_1.0.orig.tar.bz2,
+openssh-initramfs_1.0.orig.tar.lzma,  openssh-initramfs_1.0.orig.tar.xz or openssh-initramfs-1.0.orig)
+continue anyway? (y/n) y
+[...]
+dpkg-source: error: can't build with source format '3.0 (quilt)': no upstream tarball found at ../openssh-initramfs_1.0.orig.tar.{bz2,gz,lzma,xz}
+```
+
 ## Test from dev environment
 
 In order to don't be locked outside, or cut one's branch tree, clone this repo on a development machine outside of your test machine, mount the folder using sshfs and copy important files using the following commands (assuming the repo is sshfs mounted in /mnt):
