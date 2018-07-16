@@ -1,0 +1,21 @@
+Source: openssh-initramfs
+Section: net
+Priority: optional
+Maintainer: William Gathoye <william+debian@gathoye.be>
+Uploaders: William Gathoye <william+debian@gathoye.be>
+Build-Depends: debhelper (>= 9), dh-exec, dh-autoreconf
+Standards-Version: 3.9.8
+Homepage: https://github.com/wget/openssh-initramfs
+Vcs-Git: https://github.com/wget/openssh-initramfs
+Vcs-Browser: https://github.com/wget/openssh-initramfs
+
+Package: openssh-initramfs
+Architecture: all
+Depends: ${misc:Depends}, openssh-server, initramfs-tools (>= 0.94), busybox | busybox-static, udev
+Recommends: cryptsetup
+Breaks: dropbear-initramfs
+Replaces: dropbear-initramfs
+Multi-Arch: foreign
+Description: OpeenSSH server - initramfs integration
+ This package provides initramfs integration for the OpenSSH server.
+

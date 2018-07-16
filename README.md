@@ -5,6 +5,17 @@ An initramfs package for Debian allowing us to use OpenSSH instead of the limite
 For now, while a [private initiative has been started](https://github.com/pts/pts-dropbear), there is still no official implementation of ed25519 for Dropbear.
 The OpenSSH implementation also avoids to have to convert OpenSSH keys to dropbear and allows to have [stronger algorithms](https://stribika.github.io/2015/01/04/secure-secure-shell.html).
 
+## To build this package
+
+```
+git clone https://github.com/wget/openssh-initramfs.git
+cd openssh-initramfs/
+tar -cvzf openssh-initramfs_1.0.orig.tar.gz openssh-initramfs-1.0/usr/
+mv openssh-initramfs-1.0/usr/ openssh-initramfs-1.0/debian/
+cd openssh-initramfs-1.0/
+debuild -us -uc
+```
+
 ## Test from dev environment
 
 In order to don't be locked outside, or cut one's branch tree, clone this repo on a development machine outside of your test machine, mount the folder using sshfs and copy important files using the following commands (assuming the repo is sshfs mounted in /mnt):
