@@ -5,10 +5,10 @@ if [ "$1" = 'configure' ]; then
     update-initramfs -u
     if ! grep -Eq '^(.*\s)?ip=' /proc/cmdline; then
         cat <<-EOT
-            OpenSSH has been added to the initramfs. Don't forget to check
-            your "ip=" kernel bootparameter to match your desired initramfs
-            ip configuration.
+			OpenSSH has been added to the initramfs. Don't forget to check
+			your "ip=" kernel bootparameter to match your desired initramfs
+			ip configuration.
 
-        EOT
+		EOT
     fi
 fi
