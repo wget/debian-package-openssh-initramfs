@@ -2,7 +2,6 @@ Source: openssh-initramfs
 Section: net
 Priority: optional
 Maintainer: William Gathoye <william+debian@gathoye.be>
-Uploaders: William Gathoye <william+debian@gathoye.be>
 Build-Depends: debhelper (>= 9), dh-exec, dh-autoreconf
 Standards-Version: 3.9.8
 Homepage: https://github.com/wget/openssh-initramfs
