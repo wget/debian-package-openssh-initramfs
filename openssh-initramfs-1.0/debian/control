@@ -16,6 +16,6 @@ Recommends: cryptsetup
 Breaks: dropbear-initramfs
 Replaces: dropbear-initramfs
 Multi-Arch: foreign
-Description: OpeenSSH server - initramfs integration
+Description: OpenSSH server - initramfs integration
  This package provides initramfs integration for the OpenSSH server.
 
