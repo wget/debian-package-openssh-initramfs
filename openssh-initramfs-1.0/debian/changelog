@@ -1,4 +1,11 @@
-openssh-initramfs (1.0-1) RELEASED; urgency=medium
+openssh-initramfs (1.0-2) unstable; urgency=low
+
+  * Minor typos
+  * Force update-initramfs after install
+
+ -- William Gathoye <william+debian@gathoye.be>  Mon, 18 Jul 2018 17:32:55 +0200
+
+openssh-initramfs (1.0-1) unstable; urgency=low
 
   * Initial release.
 
