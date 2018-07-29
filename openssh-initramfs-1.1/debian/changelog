@@ -1,3 +1,9 @@
+openssh-initramfs (1.1-1) unstable; urgency=low
+
+  * Dedicated host keys weren't taken into account because of incorrect path
+
+ -- William Gathoye <william+debian@gathoye.be>  Sun, 29 Jul 2018 18:01:28 +0200
+
 openssh-initramfs (1.0-2) unstable; urgency=low
 
   * Minor typos

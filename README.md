@@ -10,9 +10,9 @@ The OpenSSH implementation also avoids to have to convert OpenSSH keys to dropbe
 ```
 git clone https://github.com/wget/openssh-initramfs.git
 cd openssh-initramfs/
-tar -cvzf openssh-initramfs_1.0.orig.tar.gz openssh-initramfs-1.0/usr/
-mv openssh-initramfs-1.0/usr/ openssh-initramfs-1.0/debian/
-cd openssh-initramfs-1.0/
+tar -cvzf openssh-initramfs_1.1.orig.tar.gz openssh-initramfs-1.1/usr/
+mv openssh-initramfs-1.1/usr/ openssh-initramfs-1.1/debian/
+cd openssh-initramfs-1.1/
 debuild -us -uc
 ```
 
@@ -21,11 +21,11 @@ Note: There is no need to regenerate an archive each time you make changes to th
 $ debuild -us -uc
 This package has a Debian revision number but there does not seem to be
 an appropriate original tar file or .orig directory in the parent directory;
-(expected one of openssh-initramfs_1.0.orig.tar.gz, openssh-initramfs_1.0.orig.tar.bz2,
-openssh-initramfs_1.0.orig.tar.lzma,  openssh-initramfs_1.0.orig.tar.xz or openssh-initramfs-1.0.orig)
+(expected one of openssh-initramfs_1.1.orig.tar.gz, openssh-initramfs_1.1.orig.tar.bz2,
+openssh-initramfs_1.1.orig.tar.lzma,  openssh-initramfs_1.1.orig.tar.xz or openssh-initramfs-1.1.orig)
 continue anyway? (y/n) y
 [...]
-dpkg-source: error: can't build with source format '3.0 (quilt)': no upstream tarball found at ../openssh-initramfs_1.0.orig.tar.{bz2,gz,lzma,xz}
+dpkg-source: error: can't build with source format '3.0 (quilt)': no upstream tarball found at ../openssh-initramfs_1.1.orig.tar.{bz2,gz,lzma,xz}
 ```
 
 ## Test from dev environment
