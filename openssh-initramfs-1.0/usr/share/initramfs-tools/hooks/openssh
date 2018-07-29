@@ -83,7 +83,7 @@ if [ -z "$hostKeys" ]; then
     openssh_warn "This is not recommended as these keys might be left exposed on a not encrypted partition!"
     cp -p /etc/ssh/ssh_host*key* "$DESTDIR/etc/ssh"
 else
-    if [ -z "$(find "$DESTDIR/etc/ssh" -maxdepth 1 -name 'ssh_host_*_key')" ]; then
+    if [ -z "$(find "/etc/ssh/" -maxdepth 1 -name 'ssh_host*key*' 2>/dev/null)" ]; then
         openssh_warn "No SSH host key found, remote unlocking with cryptroot-unlock via SSH won't work!"
         openssh_warn "Your current SSH connection might already be broken."
     else
