@@ -7,6 +7,12 @@ The OpenSSH implementation also avoids to have to convert OpenSSH keys to dropbe
 
 ## To build this package
 
+Install dependencies:
+```
+apt install devscripts dh-exec
+```
+
+Clone, prepare and build sources:
 ```
 git clone https://github.com/wget/openssh-initramfs.git
 cd openssh-initramfs/
