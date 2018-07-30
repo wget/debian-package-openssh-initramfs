@@ -38,7 +38,7 @@ copy_exec /usr/sbin/sshd /sbin
 # In absence of PAM, OpenSSH uses getpwnam() from libnss.
 # src.: https://serverfault.com/a/820605
 LIBC_DIR=$(ldd /usr/sbin/sshd | sed -nr 's#.* => (/lib.*)/libc\.so\.[0-9.-]+ \(0x[[:xdigit:]]+\)$#\1#p')
-find -L "$LIBC_DIR" -maxdepth 1 -name 'libnss_files.*' -type f | while read so; do
+find -L "$LIBC_DIR" -maxdepth 1 -name 'libnss_files.*' -type f | while read -r so; do
    copy_exec "$so"
 done
 
@@ -54,11 +54,17 @@ echo "root:x:0:" >"$DESTDIR/etc/group"
 
 # Copy ssh daemon configuration file.
 mkdir -p "$DESTDIR/etc/ssh"
-copy_file /etc/ssh/sshd_config "$DESTDIR/etc/ssh/"
+cp /etc/ssh/sshd_config "$DESTDIR/etc/ssh/"
 
 # When the initramfs is launched, we are in a single user mode. Disable the
 # ability for ssh to fork as another user (default sshd).
-echo "UsePrivilegeSeparation no" >> "$DESTDIR/etc/ssh/sshd_config"
+if ! grep -qE '^#*UsePrivilegeSeparation.*$' "$DESTDIR/etc/ssh/sshd_config"; then
+    openssh_warn "No UsePrivilegeSeparation statement found in /etc/ssh/sshd_config."
+    openssh_warn "Will append 'UsePrivilegeSeparation no' to the initramfs sshd_config file."
+    echo "UsePrivilegeSeparation no" >> "$DESTDIR/etc/ssh/sshd_config"
+else
+    sed -i -e 's/^#*UsePrivilegeSeparation.*$/UsePrivilegeSeparation no/g' "$DESTDIR/etc/ssh/sshd_config"
+fi
 
 # This implementation is not working with PAM. Disable it. We tried to copy
 # libpam-runtime, libpam-modules, libpam-modules-bin, /etc/pam.d/* and
@@ -66,14 +72,54 @@ echo "UsePrivilegeSeparation no" >> "$DESTDIR/etc/ssh/sshd_config"
 # complaining with errors like "Failed none for invalid user root".
 sed -i -e 's/UsePAM yes/UsePAM no/g' "$DESTDIR/etc/ssh/sshd_config"
 
-# Might want to regenerate a new modulus file
-# src.: https://entropux.net/article/openssh-moduli/
-if [ ! -f /etc/ssh/initramfs/moduli ]; then
-    openssh_warn "Missing specific moduli file for initramfs. Using the system one instead."
-    openssh_warn "This is not recommended as this moduli file might be left exposed on a not encrypted partition!"
-    cp -p /etc/ssh/moduli "$DESTDIR/etc/ssh/"
+if ! grep -qE '^#*UsePAM.*$' "$DESTDIR/etc/ssh/sshd_config"; then
+    openssh_warn "No UsePAM statement found in /etc/ssh/sshd_config."
+    openssh_warn "Will append 'UsePAM no' to the initramfs sshd_config file."
+    echo "UsePAM no" >> "$DESTDIR/etc/ssh/sshd_config"
 else
-    cp -p /etc/ssh/initramfs/moduli "$DESTDIR/etc/ssh/"
+    sed -i -e 's/^#*UsePAM.*$/UsePAM no/g' "$DESTDIR/etc/ssh/sshd_config"
+fi
+
+# Might want to regenerate a new modulus file if the key exchange protocols is
+# based on diffie hellman.
+# src.: https://entropux.net/article/openssh-moduli/
+kexAlgorithms=$(grep -E '^ *KexAlgorithms.*$' "$DESTDIR/etc/ssh/sshd_config")
+dhDetected=false
+# If no custom key exchange algorithm is found, this means the default settings
+# are being used. They have diffie-hellman in them:
+# curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,
+# ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,
+# diffie-hellman-group14-sha1
+if [ -z "$kexAlgorithms" ]; then
+    dhDetected=true
+else
+    for i in $kexAlgorithms; do
+        if [ "$i" = "KexAlgorithms" ]; then
+            continue
+        fi
+
+        IFS=,
+        for j in $i; do
+            if [ "${j#*diffie-hellman}" != "$j" ]; then
+                dhDetected=true
+                break
+            fi
+        done
+        # Reset IFS to defaults
+        # "If IFS is not set, the shell shall behave as if the value of IFS is
+        # <space><tab><newline>."
+        # src.: http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_05_03
+        unset IFS
+    done
+fi
+if [ "$dhDetected" = true ]; then
+    if [ ! -f /etc/ssh/initramfs/moduli ]; then
+        openssh_warn "Missing specific moduli file for initramfs. Using the system one instead."
+        openssh_warn "This is not recommended as this moduli file might be left exposed on a not encrypted partition!"
+        cp -p /etc/ssh/moduli "$DESTDIR/etc/ssh/"
+    else
+        cp -p /etc/ssh/initramfs/moduli "$DESTDIR/etc/ssh/"
+    fi
 fi
 
 # Copy SSH host keys. Private and public keys are needed.

@@ -1,3 +1,13 @@
+openssh-initramfs (1.2-1) unstable; urgency=low
+
+  * copy_file was not copying the sshd_config properly. Using cp instead.
+  * Set UsePAM to no properly
+  * Set UsePrivilegeSeparation to no properly
+  * Avoid warning about moduli file if key exchange algorithms do not concern
+    Diffie-Hellman
+
+ -- William Gathoye <william+debian@gathoye.be>  Sun, 30 Jul 2018 12:36:11 +0200
+
 openssh-initramfs (1.1-1) unstable; urgency=low
 
   * Dedicated host keys weren't taken into account because of incorrect path
