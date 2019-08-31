@@ -16,9 +16,9 @@ Clone, prepare and build sources:
 ```
 git clone https://github.com/wget/openssh-initramfs.git
 cd openssh-initramfs/
-tar -cvzf openssh-initramfs_1.2.orig.tar.gz openssh-initramfs-1.2/usr/
-mv openssh-initramfs-1.2/usr/ openssh-initramfs-1.2/debian/
-cd openssh-initramfs-1.2/
+tar -cvzf openssh-initramfs_1.3.orig.tar.gz openssh-initramfs-1.3/usr/
+mv openssh-initramfs-1.3/usr/ openssh-initramfs-1.3/debian/
+cd openssh-initramfs-1.3/
 debuild -us -uc
 ```
 
@@ -27,11 +27,11 @@ Note: There is no need to regenerate an archive each time you make changes to th
 $ debuild -us -uc
 This package has a Debian revision number but there does not seem to be
 an appropriate original tar file or .orig directory in the parent directory;
-(expected one of openssh-initramfs_1.2.orig.tar.gz, openssh-initramfs_1.2.orig.tar.bz2,
-openssh-initramfs_1.2.orig.tar.lzma,  openssh-initramfs_1.2.orig.tar.xz or openssh-initramfs-1.2.orig)
+(expected one of openssh-initramfs_1.3.orig.tar.gz, openssh-initramfs_1.3.orig.tar.bz2,
+openssh-initramfs_1.3.orig.tar.lzma,  openssh-initramfs_1.3.orig.tar.xz or openssh-initramfs-1.3.orig)
 continue anyway? (y/n) y
 [...]
-dpkg-source: error: can't build with source format '3.0 (quilt)': no upstream tarball found at ../openssh-initramfs_1.2.orig.tar.{bz2,gz,lzma,xz}
+dpkg-source: error: can't build with source format '3.0 (quilt)': no upstream tarball found at ../openssh-initramfs_1.3.orig.tar.{bz2,gz,lzma,xz}
 ```
 
 ## Test from dev environment
@@ -49,7 +49,7 @@ cp /mnt/usr/share/initramfs-tools/conf-hooks.d/openssh /usr/share/initramfs-tool
 
 Find a way to make that damn PAM modules work.
 
-We tried to copy the files from the packages `libpam-runtime`, `libpam-modules`, `libpam-modules-bin`, files contained in `/etc/pam.d/*` and thos ein `/lib/XXX-linux-gnu/pam*` without much success, the system was still complaining with errors like `"Failed none for invalid user root"`.
+We tried to copy the files from the packages `libpam-runtime`, `libpam-modules`, `libpam-modules-bin`, files contained in `/etc/pam.d/*` and those in `/lib/XXX-linux-gnu/pam*` without much success, the system was still complaining with errors like `"Failed none for invalid user root"`.
 
 ## License
 
