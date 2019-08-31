@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Contact: William Gathoye <william+debian@gathoye.be>
-Source: https://github.com/wget/openssh-initramfs
+Source: https://github.com/wget/debian-package-openssh-initramfs
 
 Files: *
 Copyright: © 2009  <debian@x.ray.net>

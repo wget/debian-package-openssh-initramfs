@@ -56,16 +56,6 @@ echo "root:x:0:" >"$DESTDIR/etc/group"
 mkdir -p "$DESTDIR/etc/ssh"
 cp /etc/ssh/sshd_config "$DESTDIR/etc/ssh/"
 
-# When the initramfs is launched, we are in a single user mode. Disable the
-# ability for ssh to fork as another user (default sshd).
-if ! grep -qE '^#*UsePrivilegeSeparation.*$' "$DESTDIR/etc/ssh/sshd_config"; then
-    openssh_warn "No UsePrivilegeSeparation statement found in /etc/ssh/sshd_config."
-    openssh_warn "Will append 'UsePrivilegeSeparation no' to the initramfs sshd_config file."
-    echo "UsePrivilegeSeparation no" >> "$DESTDIR/etc/ssh/sshd_config"
-else
-    sed -i -e 's/^#*UsePrivilegeSeparation.*$/UsePrivilegeSeparation no/g' "$DESTDIR/etc/ssh/sshd_config"
-fi
-
 # This implementation is not working with PAM. Disable it. We tried to copy
 # libpam-runtime, libpam-modules, libpam-modules-bin, /etc/pam.d/* and
 # /lib/XXX-linux-gnu/pam* files without much success, the system was still

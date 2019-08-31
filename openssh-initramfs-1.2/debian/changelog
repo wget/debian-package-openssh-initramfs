@@ -1,3 +1,10 @@
+openssh-initramfs (1.3-1) unstable; urgency=low
+
+  * Remove UsePrivilegeSeparation customizations as this option has been
+    removed from upstream
+
+ -- William Gathoye <william+debian@gathoye.be>  Sat, 31 Aug 2019 22:02:48 +0200
+
 openssh-initramfs (1.2-1) unstable; urgency=low
 
   * copy_file was not copying the sshd_config properly. Using cp instead.
